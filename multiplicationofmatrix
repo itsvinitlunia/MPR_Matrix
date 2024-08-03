@@ -1,8 +1,6 @@
 import java.util.*;
 class MatrixMultiplication{
-
-//Multiplying two Matrices
-
+	
 	void multi(int r1,int c1,int c2,int matrix1[][],int matrix2[][],int res[][])
 	{
 	int i,j,k;
@@ -15,8 +13,6 @@ class MatrixMultiplication{
 			}
 		}
 	}
-
-//Printing the result of multiplication of two matrices
 	
 	System.out.println("The Multiplication of Two matrices are:");
 	for(i=0;i<r1;i++){
@@ -27,41 +23,33 @@ class MatrixMultiplication{
 	}
 	}
 }
-
-//Main class
 class Multiplication{
 	
 	public static void main(String[] args){
 		MatrixMultiplication ob=new MatrixMultiplication();
 	
 	Scanner sc = new Scanner(System.in);
- 
-        //Accepting rows and columns of Matrix 1
-	
-        int r1=sc.nextInt(); 
+	System.out.println("Enter rows and columns of matrix 1:");
+	int r1=sc.nextInt();
 	int c1=sc.nextInt();
-    
-	int[][] matrix1 = new int[r1][c1];
-
-//Accepting Matrix 1
+    System.out.println("Enter rows and columns of matrix 2:");
+	int r2=sc.nextInt();
+	int c2=sc.nextInt();
 	
-System.out.println("Enter elements of Matrix1:");
+	if(c1==r2){
+	
+	int[][] matrix1 = new int[r1][c1];
+	
+	System.out.println("Enter elements of Matrix1:");
 	for(int i=0;i<r1;i++)
 	{
 		for(int j=0;j<c1;j++){
 			matrix1[i][j] = sc.nextInt();
 		}
 	}
-
-
-//Accepting rows and columns of Matrix 2
-
-int r2=sc.nextInt();
-	int c2=sc.nextInt();
     
 	int[][] matrix2 = new int[r2][c2];
 	System.out.println("Enter elements of Matrix2:");
-//Accepting Matrix 2
 	for(int i=0;i<r2;i++)
 	{
 		for(int j=0;j<c2;j++){
@@ -70,6 +58,12 @@ int r2=sc.nextInt();
 	}
 	int res[][]=new int[r1][c2];
 	ob.multi(r1,c1,c2,matrix1,matrix2,res);
+	}
+	
+	else
+	{
+		System.out.println("The Matrices cannot be multiplied");
+	}
 }
 
 }
