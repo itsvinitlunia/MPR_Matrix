@@ -6,7 +6,7 @@ import java.awt.event.ActionListener;
 public class MatrixCalculator extends JFrame implements ActionListener {
 
     private JTextArea displayBox;
-    private JComboBox<String> matrixDropdown;
+    private JComboBox<String> operationDropdown;
     private double[][] matrixA;
     private double[][] matrixB;
 
@@ -23,54 +23,38 @@ public class MatrixCalculator extends JFrame implements ActionListener {
 
         // Instructions for using the calculator
         displayBox.append("Instructions:\n");
-        displayBox.append("1. Choose a matrix from the dropdown.\n");
-        displayBox.append("2. Click an operation button to perform calculations.\n");
-        displayBox.append("3. For custom matrices, input values as prompted.\n\n");
-
-        String[] matrixOptions = {"Custom Matrix", "2x2 Identity Matrix", "3x3 Identity Matrix", "4x4 Identity Matrix"};
-        matrixDropdown = new JComboBox<>(matrixOptions);
-        matrixDropdown.addActionListener(this);
-        JPanel dropdownPanel = new JPanel();
-        dropdownPanel.setLayout(new FlowLayout());
-        dropdownPanel.add(new JLabel("Choose a matrix: "));
-        dropdownPanel.add(matrixDropdown);
-        add(dropdownPanel, BorderLayout.CENTER);
-
-        JPanel buttonPanel = new JPanel();
-        buttonPanel.setLayout(new GridLayout(2, 3));
+        displayBox.append("1. Choose an operation from the dropdown.\n");
+        displayBox.append("2. Follow the prompts to input matrices or coefficients.\n\n");
 
         String[] operations = {"Matrix Multiplication", "Matrix Partitioning", "Determinant",
                                "Matrix Inversion", "Rank of Matrix", "Solve Linear Equations"};
-        for (String operation : operations) {
-            JButton button = new JButton(operation);
-            button.setPreferredSize(new Dimension(60, 25)); // Smaller button size
-            button.addActionListener(this);
-            buttonPanel.add(button);
-        }
-        add(buttonPanel, BorderLayout.SOUTH);
+        operationDropdown = new JComboBox<>(operations);
+        operationDropdown.addActionListener(this);
+        JPanel dropdownPanel = new JPanel();
+        dropdownPanel.setLayout(new FlowLayout());
+        dropdownPanel.add(new JLabel("Choose an operation: "));
+        dropdownPanel.add(operationDropdown);
+        add(dropdownPanel, BorderLayout.CENTER);
+
+        JButton calculateButton = new JButton("Calculate");
+        calculateButton.setPreferredSize(new Dimension(80, 25)); // Smaller button size
+        calculateButton.addActionListener(this);
+        add(calculateButton, BorderLayout.SOUTH);
 
         setVisible(true);
     }
 
     public void actionPerformed(ActionEvent e) {
-        String actionCommand = e.getActionCommand();
-
-        if (e.getSource() == matrixDropdown) {
-            String selectedMatrix = (String) matrixDropdown.getSelectedItem();
-            if (selectedMatrix.equals("Custom Matrix")) {
-                inputCustomMatrix('A');
-            } else {
-                displayBox.append("Using preset: " + selectedMatrix + "\n");
-                initializePresetMatrix(selectedMatrix);
-            }
+        if (e.getSource() instanceof JComboBox) {
+            return; // Do nothing when dropdown is changed
         }
 
-        switch (actionCommand) {
+        String selectedOperation = (String) operationDropdown.getSelectedItem();
+
+        switch (selectedOperation) {
             case "Matrix Multiplication":
-                displayBox.append("Input Matrix A:\n");
-                inputCustomMatrix('A');
-                displayBox.append("Input Matrix B:\n");
-                inputCustomMatrix('B');
+                inputMatrix('A', true);
+                inputMatrix('B', false);
                 performMatrixMultiplication();
                 break;
 
@@ -79,23 +63,22 @@ public class MatrixCalculator extends JFrame implements ActionListener {
                 break;
 
             case "Determinant":
-                displayBox.append("Calculating Determinant...\n");
+                inputMatrix('A', true);
                 performDeterminantCalculation();
                 break;
 
             case "Matrix Inversion":
-                displayBox.append("Performing Matrix Inversion...\n");
+                inputMatrix('A', true);
                 performMatrixInversion();
                 break;
 
             case "Rank of Matrix":
-                displayBox.append("Calculating Rank of Matrix...\n");
+                inputMatrix('A', true);
                 performRankCalculation();
                 break;
 
             case "Solve Linear Equations":
-                displayBox.append("Solving Linear Equations...\n");
-                solveLinearEquations();
+                inputLinearEquations();
                 break;
 
             default:
@@ -103,7 +86,7 @@ public class MatrixCalculator extends JFrame implements ActionListener {
         }
     }
 
-    private void inputCustomMatrix(char matrixLabel) {
+    private void inputMatrix(char matrixLabel, boolean allowSizeInput) {
         try {
             String rowInput = JOptionPane.showInputDialog(this, "Enter the number of rows for Matrix " + matrixLabel + ":");
             String colInput = JOptionPane.showInputDialog(this, "Enter the number of columns for Matrix " + matrixLabel + ":");
@@ -140,31 +123,25 @@ public class MatrixCalculator extends JFrame implements ActionListener {
         }
     }
 
-    private void initializePresetMatrix(String selectedMatrix) {
-        switch (selectedMatrix) {
-            case "2x2 Identity Matrix":
-                matrixB = new double[][]{{1, 0}, {0, 1}};
-                break;
+    private void inputLinearEquations() {
+        try {
+            double[][] coefficients = new double[2][3];
 
-            case "3x3 Identity Matrix":
-                matrixB = new double[][]{{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
-                break;
+            // Input for the first equation
+            coefficients[0][0] = Double.parseDouble(JOptionPane.showInputDialog(this, "Enter coefficient a1 for the first equation (a1x + b1y = c1):"));
+            coefficients[0][1] = Double.parseDouble(JOptionPane.showInputDialog(this, "Enter coefficient b1 for the first equation:"));
+            coefficients[0][2] = Double.parseDouble(JOptionPane.showInputDialog(this, "Enter constant c1 for the first equation:"));
 
-            case "4x4 Identity Matrix":
-                matrixB = new double[][]{{1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 1, 0}, {0, 0, 0, 1}};
-                break;
+            // Input for the second equation
+            coefficients[1][0] = Double.parseDouble(JOptionPane.showInputDialog(this, "Enter coefficient a2 for the second equation (a2x + b2y = c2):"));
+            coefficients[1][1] = Double.parseDouble(JOptionPane.showInputDialog(this, "Enter coefficient b2 for the second equation:"));
+            coefficients[1][2] = Double.parseDouble(JOptionPane.showInputDialog(this, "Enter constant c2 for the second equation:"));
 
-            default:
-                displayBox.append("No preset matrix available.\n");
-                return;
-        }
+            matrixA = coefficients; // Store the coefficients in matrix A
+            solveLinearEquations();
 
-        displayBox.append("Matrix B:\n");
-        for (int i = 0; i < matrixB.length; i++) {
-            for (int j = 0; j < matrixB[i].length; j++) {
-                displayBox.append(matrixB[i][j] + "\t");
-            }
-            displayBox.append("\n");
+        } catch (NumberFormatException ex) {
+            displayBox.append("Invalid input. Please enter numeric values.\n");
         }
     }
 
@@ -262,68 +239,86 @@ public class MatrixCalculator extends JFrame implements ActionListener {
         }
 
         int n = matrixA.length;
-        double[][] A = new double[n][n];
 
-        for (int i = 0; i < n; i++) {
-            System.arraycopy(matrixA[i], 0, A[i], 0, n);
+        if (n != matrixA[0].length) {
+            displayBox.append("Matrix must be square for inversion.\n");
+            return;
         }
 
-        double d = calculateDeterminant(A);
-        double[][] inv = new double[n][n];
-
-        if (d == 0) {
-            displayBox.append("Inverse not possible.\n");
+        double[][] inv = invertMatrix(matrixA);
+        if (inv == null) {
+            displayBox.append("Matrix inversion not possible (determinant is zero).\n");
         } else {
-            double[][] adj = new double[n][n];
-            calculateAdjoint(A, adj, n);
-
-            for (int i = 0; i < n; i++) {
-                for (int j = 0; j < n; j++) {
-                    inv[i][j] = adj[i][j] / d;
-                }
-            }
-
             displayBox.append("The Inverse of the matrix is:\n");
             for (int i = 0; i < n; i++) {
                 for (int j = 0; j < n; j++) {
-                    displayBox.append(String.format("%.2f\t", inv[i][j]));
+                    displayBox.append(inv[i][j] + "\t");
                 }
                 displayBox.append("\n");
             }
         }
     }
 
-    private void calculateAdjoint(double[][] A, double[][] adj, int n) {
-        if (n == 1) {
-            adj[0][0] = 1;
-            return;
-        }
+    private double[][] invertMatrix(double[][] A) {
+        int n = A.length;
+        double[][] augmented = new double[n][2 * n];
 
-        int sign = 1;
-        double[][] temp = new double[n][n];
-
+        // Create augmented matrix [A | I]
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
-                cofactor(A, temp, i, j, n);
-                sign = ((i + j) % 2 == 0) ? 1 : -1;
-                adj[j][i] = sign * calculateDeterminant(temp);
+                augmented[i][j] = A[i][j];
             }
+            augmented[i][i + n] = 1; // Identity matrix
         }
-    }
 
-    private void cofactor(double[][] A, double[][] temp, int p, int q, int n) {
-        int i = 0, j = 0;
-        for (int row = 0; row < n; row++) {
-            for (int col = 0; col < n; col++) {
-                if (row != p && col != q) {
-                    temp[i][j++] = A[row][col];
-                    if (j == n - 1) {
-                        j = 0;
-                        i++;
+        // Perform row operations
+        for (int i = 0; i < n; i++) {
+            // Find pivot
+            int pivotRow = i;
+            for (int j = i + 1; j < n; j++) {
+                if (Math.abs(augmented[j][i]) > Math.abs(augmented[pivotRow][i])) {
+                    pivotRow = j;
+                }
+            }
+
+            // Swap rows if necessary
+            if (pivotRow != i) {
+                double[] temp = augmented[i];
+                augmented[i] = augmented[pivotRow];
+                augmented[pivotRow] = temp;
+            }
+
+            // Check if matrix is singular
+            if (augmented[i][i] == 0) {
+                return null; // Not invertible
+            }
+
+            // Normalize the pivot row
+            double pivot = augmented[i][i];
+            for (int j = 0; j < 2 * n; j++) {
+                augmented[i][j] /= pivot;
+            }
+
+            // Eliminate entries in other rows
+            for (int j = 0; j < n; j++) {
+                if (j != i) {
+                    double factor = augmented[j][i];
+                    for (int k = 0; k < 2 * n; k++) {
+                        augmented[j][k] -= factor * augmented[i][k];
                     }
                 }
             }
         }
+
+        // Extract the inverse matrix
+        double[][] inverse = new double[n][n];
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                inverse[i][j] = augmented[i][j + n];
+            }
+        }
+
+        return inverse;
     }
 
     private void performRankCalculation() {
@@ -378,7 +373,7 @@ public class MatrixCalculator extends JFrame implements ActionListener {
 
     private void solveLinearEquations() {
         if (matrixA == null) {
-            displayBox.append("Please provide a 2x2 coefficient matrix for solving linear equations.\n");
+            displayBox.append("Please provide a valid matrix for solving linear equations.\n");
             return;
         }
 
