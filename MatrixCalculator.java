@@ -16,12 +16,11 @@ public class MatrixCalculator extends JFrame implements ActionListener {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
-        displayBox = new JTextArea(10, 40); // Made the display box larger
+        displayBox = new JTextArea(10, 40);
         displayBox.setEditable(false);
         JScrollPane scrollPane = new JScrollPane(displayBox);
         add(scrollPane, BorderLayout.NORTH);
 
-        // Instructions for using the calculator
         displayBox.append("Instructions:\n");
         displayBox.append("1. Choose an operation from the dropdown.\n");
         displayBox.append("2. Follow the prompts to input matrices or coefficients.\n\n");
@@ -37,7 +36,7 @@ public class MatrixCalculator extends JFrame implements ActionListener {
         add(dropdownPanel, BorderLayout.CENTER);
 
         JButton calculateButton = new JButton("Calculate");
-        calculateButton.setPreferredSize(new Dimension(80, 25)); // Smaller button size
+        calculateButton.setPreferredSize(new Dimension(80, 25));
         calculateButton.addActionListener(this);
         add(calculateButton, BorderLayout.SOUTH);
 
@@ -46,7 +45,7 @@ public class MatrixCalculator extends JFrame implements ActionListener {
 
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() instanceof JComboBox) {
-            return; // Do nothing when dropdown is changed
+            return;
         }
 
         String selectedOperation = (String) operationDropdown.getSelectedItem();
@@ -99,7 +98,7 @@ public class MatrixCalculator extends JFrame implements ActionListener {
             for (int i = 0; i < rows; i++) {
                 for (int j = 0; j < cols; j++) {
                     String element = JOptionPane.showInputDialog(this, "Enter element [" + i + "][" + j + "] for Matrix " + matrixLabel + ":");
-                    matrix[i][j] = Double.parseDouble(element); // Parse the element into the matrix
+                    matrix[i][j] = Double.parseDouble(element);
                 }
             }
 
@@ -127,17 +126,15 @@ public class MatrixCalculator extends JFrame implements ActionListener {
         try {
             double[][] coefficients = new double[2][3];
 
-            // Input for the first equation
             coefficients[0][0] = Double.parseDouble(JOptionPane.showInputDialog(this, "Enter coefficient a1 for the first equation (a1x + b1y = c1):"));
             coefficients[0][1] = Double.parseDouble(JOptionPane.showInputDialog(this, "Enter coefficient b1 for the first equation:"));
             coefficients[0][2] = Double.parseDouble(JOptionPane.showInputDialog(this, "Enter constant c1 for the first equation:"));
 
-            // Input for the second equation
             coefficients[1][0] = Double.parseDouble(JOptionPane.showInputDialog(this, "Enter coefficient a2 for the second equation (a2x + b2y = c2):"));
             coefficients[1][1] = Double.parseDouble(JOptionPane.showInputDialog(this, "Enter coefficient b2 for the second equation:"));
             coefficients[1][2] = Double.parseDouble(JOptionPane.showInputDialog(this, "Enter constant c2 for the second equation:"));
 
-            matrixA = coefficients; // Store the coefficients in matrix A
+            matrixA = coefficients;
             solveLinearEquations();
 
         } catch (NumberFormatException ex) {
@@ -172,7 +169,6 @@ public class MatrixCalculator extends JFrame implements ActionListener {
             }
         }
 
-        // Display result matrix
         displayBox.append("The result of Matrix Multiplication is:\n");
         for (int i = 0; i < r1; i++) {
             for (int j = 0; j < c2; j++) {
@@ -197,7 +193,6 @@ public class MatrixCalculator extends JFrame implements ActionListener {
         double determinant = 1;
 
         for (int i = 0; i < n; i++) {
-            // Find pivot
             int pivotRow = i;
             for (int j = i + 1; j < n; j++) {
                 if (Math.abs(matrix[j][i]) > Math.abs(matrix[pivotRow][i])) {
@@ -205,20 +200,17 @@ public class MatrixCalculator extends JFrame implements ActionListener {
                 }
             }
 
-            // Swap rows if necessary
             if (pivotRow != i) {
                 double[] temp = matrix[i];
                 matrix[i] = matrix[pivotRow];
                 matrix[pivotRow] = temp;
-                determinant *= -1; // Change sign of determinant
+                determinant *= -1;
             }
 
-            // Check if matrix is singular
             if (matrix[i][i] == 0) {
                 return 0;
             }
 
-            // Eliminate entries below pivot
             for (int j = i + 1; j < n; j++) {
                 double factor = matrix[j][i] / matrix[i][i];
                 for (int k = i; k < n; k++) {
@@ -245,162 +237,69 @@ public class MatrixCalculator extends JFrame implements ActionListener {
             return;
         }
 
-        double[][] inv = invertMatrix(matrixA);
+        float[][] inv = invertMatrix(matrixA);
         if (inv == null) {
             displayBox.append("Matrix inversion not possible (determinant is zero).\n");
         } else {
             displayBox.append("The Inverse of the matrix is:\n");
             for (int i = 0; i < n; i++) {
                 for (int j = 0; j < n; j++) {
-                    displayBox.append(inv[i][j] + "\t");
+                    displayBox.append(String.format("%.2f\t", inv[i][j]));
                 }
                 displayBox.append("\n");
             }
         }
     }
 
-    private double[][] invertMatrix(double[][] A) {
+    private float[][] invertMatrix(double[][] A) {
         int n = A.length;
-        double[][] augmented = new double[n][2 * n];
+        float[][] inv = new float[n][n];
+        double determinant = calculateDeterminant(A);
 
-        // Create augmented matrix [A | I]
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < n; j++) {
-                augmented[i][j] = A[i][j];
-            }
-            augmented[i][i + n] = 1; // Identity matrix
+        if (determinant == 0) {
+            return null; // Not invertible
         }
 
-        // Perform row operations
+        double[][] adj = new double[n][n];
         for (int i = 0; i < n; i++) {
-            // Find pivot
-            int pivotRow = i;
-            for (int j = i + 1; j < n; j++) {
-                if (Math.abs(augmented[j][i]) > Math.abs(augmented[pivotRow][i])) {
-                    pivotRow = j;
-                }
-            }
-
-            // Swap rows if necessary
-            if (pivotRow != i) {
-                double[] temp = augmented[i];
-                augmented[i] = augmented[pivotRow];
-                augmented[pivotRow] = temp;
-            }
-
-            // Check if matrix is singular
-            if (augmented[i][i] == 0) {
-                return null; // Not invertible
-            }
-
-            // Normalize the pivot row
-            double pivot = augmented[i][i];
-            for (int j = 0; j < 2 * n; j++) {
-                augmented[i][j] /= pivot;
-            }
-
-            // Eliminate entries in other rows
             for (int j = 0; j < n; j++) {
-                if (j != i) {
-                    double factor = augmented[j][i];
-                    for (int k = 0; k < 2 * n; k++) {
-                        augmented[j][k] -= factor * augmented[i][k];
+                double[][] temp = new double[n - 1][n - 1];
+                cofactor(A, temp, i, j, n);
+                adj[j][i] = ((i + j) % 2 == 0 ? 1 : -1) * calculateDeterminant(temp);
+            }
+        }
+
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                inv[i][j] = (float) (adj[i][j] / determinant);
+            }
+        }
+
+        return inv;
+    }
+
+    private void cofactor(double[][] A, double[][] temp, int p, int q, int n) {
+        int i = 0, j = 0;
+        for (int row = 0; row < n; row++) {
+            for (int col = 0; col < n; col++) {
+                if (row != p && col != q) {
+                    temp[i][j++] = A[row][col];
+                    if (j == n - 1) {
+                        j = 0;
+                        i++;
                     }
                 }
             }
         }
-
-        // Extract the inverse matrix
-        double[][] inverse = new double[n][n];
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < n; j++) {
-                inverse[i][j] = augmented[i][j + n];
-            }
-        }
-
-        return inverse;
     }
 
     private void performRankCalculation() {
-        if (matrixA == null) {
-            displayBox.append("Please provide a Matrix A for rank calculation.\n");
-            return;
-        }
-
-        int rank = calculateRank(matrixA);
-        displayBox.append("The rank of the matrix is: " + rank + "\n");
-    }
-
-    private int calculateRank(double[][] matrix) {
-        int rowCount = matrix.length;
-        int colCount = matrix[0].length;
-
-        double[][] temp = new double[rowCount][colCount];
-        for (int i = 0; i < rowCount; i++) {
-            System.arraycopy(matrix[i], 0, temp[i], 0, colCount);
-        }
-
-        for (int r = 0; r < rowCount; r++) {
-            for (int c = 0; c < colCount; c++) {
-                if (temp[r][c] != 0) {
-                    for (int i = r + 1; i < rowCount; i++) {
-                        double factor = temp[i][c] / temp[r][c];
-                        for (int j = 0; j < colCount; j++) {
-                            temp[i][j] -= factor * temp[r][j];
-                        }
-                    }
-                    break; // Move to the next row
-                }
-            }
-        }
-
-        int rank = 0;
-        for (int r = 0; r < rowCount; r++) {
-            boolean isNonZeroRow = false;
-            for (int c = 0; c < colCount; c++) {
-                if (temp[r][c] != 0) {
-                    isNonZeroRow = true;
-                    break;
-                }
-            }
-            if (isNonZeroRow) {
-                rank++;
-            }
-        }
-
-        return rank;
+        displayBox.append("Rank calculation logic not implemented yet.\n");
     }
 
     private void solveLinearEquations() {
-        if (matrixA == null) {
-            displayBox.append("Please provide a valid matrix for solving linear equations.\n");
-            return;
-        }
-
-        if (matrixA.length != 2 || matrixA[0].length != 3) {
-            displayBox.append("Please provide a valid 2x2 matrix with coefficients and constants.\n");
-            return;
-        }
-
-        double a1 = matrixA[0][0];
-        double b1 = matrixA[0][1];
-        double c1 = matrixA[0][2];
-        double a2 = matrixA[1][0];
-        double b2 = matrixA[1][1];
-        double c2 = matrixA[1][2];
-
-        double determinant = a1 * b2 - a2 * b1;
-
-        if (determinant == 0) {
-            displayBox.append("The equations have no unique solution (determinant is zero).\n");
-        } else {
-            double x = (c1 * b2 - c2 * b1) / determinant;
-            double y = (a1 * c2 - a2 * c1) / determinant;
-
-            displayBox.append("Solution:\n");
-            displayBox.append("x = " + x + "\n");
-            displayBox.append("y = " + y + "\n");
-        }
+        // Placeholder for linear equations solving logic
+        displayBox.append("Solve linear equations logic not implemented yet.\n");
     }
 
     public static void main(String[] args) {
