@@ -1,8 +1,7 @@
-import javax.swing.*; 
+import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.Scanner;
 
 public class MatrixCalculator extends JFrame implements ActionListener {
 
@@ -125,18 +124,19 @@ public class MatrixCalculator extends JFrame implements ActionListener {
 
     private void inputLinearEquations() {
         try {
-            double[][] coefficients = new double[2][3];
+            int n = Integer.parseInt(JOptionPane.showInputDialog(this, "Enter number of variables:"));
 
-            coefficients[0][0] = Double.parseDouble(JOptionPane.showInputDialog(this, "Enter coefficient a1 for the first equation (a1x + b1y = c1):"));
-            coefficients[0][1] = Double.parseDouble(JOptionPane.showInputDialog(this, "Enter coefficient b1 for the first equation:"));
-            coefficients[0][2] = Double.parseDouble(JOptionPane.showInputDialog(this, "Enter constant c1 for the first equation:"));
+            double[][] coefficients = new double[n][n];
+            double[] constants = new double[n];
 
-            coefficients[1][0] = Double.parseDouble(JOptionPane.showInputDialog(this, "Enter coefficient a2 for the second equation (a2x + b2y = c2):"));
-            coefficients[1][1] = Double.parseDouble(JOptionPane.showInputDialog(this, "Enter coefficient b2 for the second equation:"));
-            coefficients[1][2] = Double.parseDouble(JOptionPane.showInputDialog(this, "Enter constant c2 for the second equation:"));
+            for (int i = 0; i < n; i++) {
+                for (int j = 0; j < n; j++) {
+                    coefficients[i][j] = Double.parseDouble(JOptionPane.showInputDialog(this, "Enter coefficient a" + (i + 1) + (j + 1) + ":"));
+                }
+                constants[i] = Double.parseDouble(JOptionPane.showInputDialog(this, "Enter constant c" + (i + 1) + ":"));
+            }
 
-            matrixA = coefficients;
-            solveLinearEquations();
+            solveLinearEquations(coefficients, constants);
 
         } catch (NumberFormatException ex) {
             displayBox.append("Invalid input. Please enter numeric values.\n");
@@ -253,7 +253,6 @@ public class MatrixCalculator extends JFrame implements ActionListener {
     }
 
     private void inputPartitionedMatrix() {
-        Scanner sc = new Scanner(System.in);
         int rows = Integer.parseInt(JOptionPane.showInputDialog(this, "Enter number of rows:"));
         int columns = Integer.parseInt(JOptionPane.showInputDialog(this, "Enter number of columns:"));
 
@@ -352,15 +351,105 @@ public class MatrixCalculator extends JFrame implements ActionListener {
     }
 
     private void performRankCalculation() {
-        displayBox.append("Rank calculation logic not implemented yet.\n");
+        if (matrixA == null) {
+            displayBox.append("Please provide a Matrix A for rank calculation.\n");
+            return;
+        }
+
+        int rank = calculateRank(matrixA);
+        displayBox.append("The rank of the matrix is: " + rank + "\n");
     }
 
-    private void solveLinearEquations() {
-        displayBox.append("Solve linear equations logic not implemented yet.\n");
+    private int calculateRank(double[][] matrix) {
+        int rows = matrix.length;
+        int cols = matrix[0].length;
+
+        double[][] tempMatrix = new double[rows][cols];
+        for (int i = 0; i < rows; i++) {
+            System.arraycopy(matrix[i], 0, tempMatrix[i], 0, cols);
+        }
+
+        int rank = 0;
+        for (int row = 0; row < rows; row++) {
+            int pivot = -1;
+            for (int i = row; i < rows; i++) {
+                if (Math.abs(tempMatrix[i][row]) > 1e-10) {
+                    pivot = i;
+                    break;
+                }
+            }
+
+            if (pivot != -1) {
+                double[] temp = tempMatrix[row];
+                tempMatrix[row] = tempMatrix[pivot];
+                tempMatrix[pivot] = temp;
+                rank++;
+
+                for (int i = row + 1; i < rows; i++) {
+                    double factor = tempMatrix[i][row] / tempMatrix[row][row];
+                    for (int j = row; j < cols; j++) {
+                        tempMatrix[i][j] -= factor * tempMatrix[row][j];
+                    }
+                }
+            }
+        }
+        return rank;
     }
 
-    public static void main(String[] args) 
-{
+    private void solveLinearEquations(double[][] coefficients, double[] constants) {
+        int n = coefficients.length;
+
+        // Perform Gaussian elimination
+        for (int i = 0; i < n; i++) {
+            int pivotRow = i;
+            for (int j = i + 1; j < n; j++) {
+                if (Math.abs(coefficients[j][i]) > Math.abs(coefficients[pivotRow][i])) {
+                    pivotRow = j;
+                }
+            }
+
+            // Swap rows
+            if (pivotRow != i) {
+                double[] temp = coefficients[i];
+                coefficients[i] = coefficients[pivotRow];
+                coefficients[pivotRow] = temp;
+                double tempConst = constants[i];
+                constants[i] = constants[pivotRow];
+                constants[pivotRow] = tempConst;
+            }
+
+            // Make the pivot value 1 and eliminate the column below
+            double pivotValue = coefficients[i][i];
+            for (int j = i; j < n; j++) {
+                coefficients[i][j] /= pivotValue;
+            }
+            constants[i] /= pivotValue;
+
+            for (int j = i + 1; j < n; j++) {
+                double factor = coefficients[j][i];
+                for (int k = i; k < n; k++) {
+                    coefficients[j][k] -= factor * coefficients[i][k];
+                }
+                constants[j] -= factor * constants[i];
+            }
+        }
+
+        // Back substitution to find solutions
+        double[] solutions = new double[n];
+        for (int i = n - 1; i >= 0; i--) {
+            solutions[i] = constants[i];
+            for (int j = i + 1; j < n; j++) {
+                solutions[i] -= coefficients[i][j] * solutions[j];
+            }
+        }
+
+        displayBox.append("The solution to the linear equations is:\n");
+        for (int i = 0; i < n; i++) {
+            displayBox.append("x" + (i + 1) + " = " + solutions[i] + "\n");
+        }
+    }
+
+    public static void main(String[] args) {
         SwingUtilities.invokeLater(MatrixCalculator::new);
-   }
+    }
 }
