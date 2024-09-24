@@ -1,7 +1,8 @@
-import javax.swing.*;
+import javax.swing.*; 
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Scanner;
 
 public class MatrixCalculator extends JFrame implements ActionListener {
 
@@ -58,7 +59,7 @@ public class MatrixCalculator extends JFrame implements ActionListener {
                 break;
 
             case "Matrix Partitioning":
-                displayBox.append("Matrix Partitioning logic not implemented yet.\n");
+                inputPartitionedMatrix();
                 break;
 
             case "Determinant":
@@ -251,13 +252,70 @@ public class MatrixCalculator extends JFrame implements ActionListener {
         }
     }
 
+    private void inputPartitionedMatrix() {
+        Scanner sc = new Scanner(System.in);
+        int rows = Integer.parseInt(JOptionPane.showInputDialog(this, "Enter number of rows:"));
+        int columns = Integer.parseInt(JOptionPane.showInputDialog(this, "Enter number of columns:"));
+
+        int[][] matrix = new int[rows][columns];
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < columns; j++) {
+                matrix[i][j] = Integer.parseInt(JOptionPane.showInputDialog(this, "Enter element [" + i + "][" + j + "]:"));
+            }
+        }
+
+        int rowPartitions = Integer.parseInt(JOptionPane.showInputDialog(this, "Enter number of row partitions:"));
+        int colPartitions = Integer.parseInt(JOptionPane.showInputDialog(this, "Enter number of column partitions:"));
+
+        displayBox.append("\nPartitioned Matrices:\n");
+        partitionAndPrintMatrix(matrix, rowPartitions, colPartitions);
+    }
+
+    public void partitionAndPrintMatrix(int[][] matrix, int rowPartitions, int colPartitions) {
+        int rows = matrix.length;
+        int cols = matrix[0].length;
+
+        int rowStep = (int) Math.ceil((double) rows / rowPartitions);
+        int colStep = (int) Math.ceil((double) cols / colPartitions);
+
+        int partitionCount = 1;
+
+        for (int rp = 0; rp < rowPartitions; rp++) {
+            int rowsInPartition = Math.min(rowStep, rows - rp * rowStep);
+            if (rowsInPartition <= 0) break;
+
+            for (int cp = 0; cp < colPartitions; cp++) {
+                int colsInPartition = Math.min(colStep, cols - cp * colStep);
+                if (colsInPartition <= 0) break;
+                displayBox.append("Matrix " + partitionCount++ + " ");
+                if (cp < colPartitions - 1) {
+                    for (int k = 0; k < colStep * 5; k++) displayBox.append(" ");
+                }
+            }
+            displayBox.append("\n");
+
+            for (int i = rp * rowStep; i < rp * rowStep + rowsInPartition; i++) {
+                for (int cp = 0; cp < colPartitions; cp++) {
+                    int colsInPartition = Math.min(colStep, cols - cp * colStep);
+                    if (colsInPartition <= 0) break;
+                    for (int j = cp * colStep; j < cp * colStep + colsInPartition; j++) {
+                        displayBox.append(String.format("%5d", matrix[i][j]));
+                    }
+                    if (cp < colPartitions - 1) displayBox.append("     ");
+                }
+                displayBox.append("\n");
+            }
+            displayBox.append("\n");
+        }
+    }
+
     private float[][] invertMatrix(double[][] A) {
         int n = A.length;
         float[][] inv = new float[n][n];
         double determinant = calculateDeterminant(A);
 
         if (determinant == 0) {
-            return null; // Not invertible
+            return null;
         }
 
         double[][] adj = new double[n][n];
@@ -298,11 +356,11 @@ public class MatrixCalculator extends JFrame implements ActionListener {
     }
 
     private void solveLinearEquations() {
-        // Placeholder for linear equations solving logic
         displayBox.append("Solve linear equations logic not implemented yet.\n");
     }
 
-    public static void main(String[] args) {
-        new MatrixCalculator();
-    }
+    public static void main(String[] args) 
+{
+        SwingUtilities.invokeLater(MatrixCalculator::new);
+   }
 }
